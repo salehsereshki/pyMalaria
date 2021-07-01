@@ -1,8 +1,42 @@
-import pyMalaria.methods as methods
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
 import numpy as np
+
+count_names = ['count_Cs_p', 'count_Cs_n', 'count_methCs_p', 'count_methCs_n']
+
+def get_density_vec(chro_name, meth_seq, thrshld):
+    sliding_window = 1000
+    chro = chro_name
+    count_Cs_p = []
+    count_Cs_n = []
+    count_methCs_p = []
+    count_methCs_n = []
+    for i in range(0, len(meth_seq[chro]), sliding_window):
+        seq = meth_seq[chro]
+        meth_c_p = 0
+        meth_c_n = 0
+        count_c_p = 0
+        count_c_n = 0
+        for j in range(i, i + sliding_window):
+            if j < len(seq):
+                if float(seq[j]) > thrshld:
+                    meth_c_p += 1
+                elif float(seq[j]) < -1 * thrshld:
+                    meth_c_n += 1
+
+                if float(seq[j]) > 0:
+                    count_c_p += 1
+                elif float(seq[j]) < 0:
+                    count_c_n += 1
+
+        count_methCs_p.append(meth_c_p)
+        count_methCs_n.append(meth_c_n)
+        count_Cs_p.append(count_c_p)
+        count_Cs_n.append(count_c_n)
+    return np.array(count_Cs_p), np.array(count_Cs_n), np.array(count_methCs_p), np.array(count_methCs_n)
+
 
 
 def check_files(organism_name, threshold, chro_num, count_names):
@@ -30,6 +64,8 @@ def save(organism_name, threshold, chro_num, _counts, _count_names):
 
 
 def load(organism_name, threshold, chro_num, count_names):
+    chro_num = str(chro_num)
+    threshold = str(threshold)
     count_Cs_p = np.load('./saved_data/' + organism_name + count_names[0] + '_chro_' + chro_num + '.npy')
     count_Cs_n = np.load('./saved_data/' + organism_name + count_names[1] + '_chro_' + chro_num + '.npy')
     count_methCs_p = np.load(
@@ -39,15 +75,22 @@ def load(organism_name, threshold, chro_num, count_names):
     return count_Cs_p, count_Cs_n, count_methCs_p, count_methCs_n
 
 
+def make_all_chromosome_density_plot(chromosomes, organism_name, meth_seq):
+    thresholds = [0.1]
+    for i in range(len(chromosomes)):
+        plot_density_Cs(organism_name, chromosomes[i], meth_seq, thresholds[0], i+1)
+        for thrs in thresholds:
+            plot_density_methCs(organism_name, chromosomes[i], meth_seq, thrs, i+1)
+
+
 def compute_and_save(organism_name, chro, meth_seq, threshold, chro_num, count_names):
-    count_Cs_p, count_Cs_n, count_methCs_p, count_methCs_n = methods.get_density_vec(chro, meth_seq, thrshld=float(threshold))
+    count_Cs_p, count_Cs_n, count_methCs_p, count_methCs_n = get_density_vec(chro, meth_seq, thrshld=float(threshold))
     _counts = [count_Cs_p, count_Cs_n, count_methCs_p, count_methCs_n]
     save(organism_name, threshold, chro_num, _counts, count_names)
     return count_Cs_p, count_Cs_n, count_methCs_p, count_methCs_n
 
 
 def plot_density_Cs(organism_name, chro, meth_seq, threshold, chro_num, from_file=False):
-    count_names = ['count_Cs_p', 'count_Cs_n', 'count_methCs_p', 'count_methCs_n']
     if not from_file or not check_files(organism_name, str(0), str(chro_num), count_names):
         count_Cs_p, count_Cs_n, count_methCs_p, count_methCs_n = compute_and_save(organism_name, chro, meth_seq,
                                                                                   str(threshold), str(chro_num),
@@ -76,8 +119,6 @@ def plot_density_Cs(organism_name, chro, meth_seq, threshold, chro_num, from_fil
     plt.tight_layout()
     plt.savefig(organism_name + '_C_chro_' + str(chro_num), dpi=2000)
 
-
-#        plt.show()
 
 def plot_density_methCs(organism_name, chro, meth_seq, thrshld, chro_num, from_file=False):
     count_names = ['count_Cs_p', 'count_Cs_n', 'count_methCs_p', 'count_methCs_n']

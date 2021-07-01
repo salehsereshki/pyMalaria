@@ -5,7 +5,6 @@ from os.path import isfile, join
 import numpy as np
 import pandas as pd
 
-NON_METH_TAG = 0.00000001
 
 pc_meth_adrss = [f for f in listdir('./') if isfile(join('./', f))]
 
@@ -65,7 +64,7 @@ pf_chromosomes = ['Pf3D7_01_v3', 'Pf3D7_02_v3', 'Pf3D7_03_v3', 'Pf3D7_04_v3', 'P
 import pyMalaria.density_plot as DP
 thresholds = [0.1]
 for i in range(len(pv_chromosomes)):
-        #DP.plot_density_Cs(organism_name, pc_chromosomes[i], meth_seq, thresholds[0], i+1)
+        DP.plot_density_Cs(organism_name, pc_chromosomes[i], meth_seq, thresholds[0], i+1)
         for thrs in thresholds:
             DP.plot_density_methCs(organism_name, pv_chromosomes[i], meth_seq, thrs, i+1)
 

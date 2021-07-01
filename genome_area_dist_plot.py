@@ -1,6 +1,73 @@
-import pyMalaria.methods as methods
+
 import numpy as np
 import matplotlib.pyplot as plt
+import pyMalaria.input_parser as input_parser
+
+
+def get_genome_regions_percentage(annot_df, sequences, methylations, coverage_threshold, thrshold = 0.1):
+
+    ## Iterating on the Methylations rows. For the Cytosines which has coverage. The area status of the Cytosine is calculated.
+    ##the number of Cytosines with coverage in genomic areas are calculated.
+    ##the number of methylated Cytosines with coverage in the genomic areas are calculated.
+    ##Divide the number of methylated on each region either by the total number of methylated Cytosines or by the total number of cytosines in that area.
+    genes_df = input_parser.subset_genes(annot_df)
+    genes_seq = input_parser.make_gene_string(genes_df, sequences)
+    exons_df = input_parser.subset_exons(annot_df)
+    exons_seq = input_parser.make_exon_string(exons_df, sequences)
+    gene_plus_flanking = input_parser.make_gene_plus_flanking_string(genes_df, sequences)
+
+    count_mc_intergenic = 0
+    count_c_intergenic = 0
+    count_mc_intron = 0
+    count_c_intron = 0
+    count_mc_exon = 0
+    count_c_exon = 0
+
+    count_mc_intergenic_flanking = 0
+    count_c_intergenic_flanking = 0
+
+    count_mc_intergenic_fargene = 0
+    count_c_intergenic_fargene = 0
+
+    for index, row in methylations.iterrows():
+        mc = float(row['meth'])
+        unmc = float(row['unmeth'])
+
+        if mc + unmc > coverage_threshold:
+            mlvl = mc / (mc + unmc)
+            is_gene = genes_seq[row['chr']][row['position'] - 1] == '-1' or genes_seq[row['chr']][row['position'] - 1] == '1'
+            is_exon = exons_seq[row['chr']][row['position'] - 1] == '-1' or exons_seq[row['chr']][row['position'] - 1] == '1'
+            is_gene_plus_flanking = gene_plus_flanking[row['chr']][row['position'] - 1] == '-1' or gene_plus_flanking[row['chr']][row['position'] - 1] == '1'
+
+            if is_gene and is_exon:
+                count_c_exon += 1
+                if mlvl > thrshold:
+                    count_mc_exon += 1
+            elif is_gene and not is_exon:
+                count_c_intron += 1
+                if mlvl > thrshold:
+                    count_mc_intron += 1
+            if not is_gene:
+                count_c_intergenic += 1
+                if mlvl > thrshold:
+                    count_mc_intergenic += 1
+                if is_gene_plus_flanking:
+                    count_c_intergenic_flanking += 1
+                    if mlvl > thrshold:
+                        count_mc_intergenic_flanking += 1
+                else:
+                    count_c_intergenic_fargene += 1
+                    if mlvl > thrshold:
+                        count_mc_intergenic_fargene += 1
+
+
+    res_meth_pct = [count_mc_exon * 100 / count_c_exon, count_mc_intron * 100 / count_c_intron, count_mc_intergenic * 100 / count_c_intergenic,
+                    count_mc_intergenic_flanking * 100 / count_c_intergenic_flanking, count_mc_intergenic_fargene * 100 / count_c_intergenic_fargene
+                    ]
+    res_pie_pct = [count_mc_exon/ (count_mc_intergenic + count_mc_exon+ count_mc_intron) ,
+                   count_mc_intron/ (count_mc_intergenic + count_mc_exon+ count_mc_intron) ,
+                   count_mc_intergenic/ (count_mc_intergenic + count_mc_exon+ count_mc_intron) ]
+    return res_meth_pct, res_pie_pct
 
 
 def rgb_to_hex(rgb):
@@ -13,11 +80,11 @@ def plot_meth_percent_genome_areas(organism_name, annot_df, sequences, methylati
             res_meth_pct = np.load('./saved_data/'+organism_name+'_thr_'+str(thrshold)+'_comp_res_meth_pct.npy')
             res_pie_pct = np.load('./saved_data/'+organism_name+'_thr_'+str(thrshold)+'_comp_res_pie_pct.npy')
         except (FileNotFoundError, IOError):
-            res_meth_pct, res_pie_pct = methods.get_genome_regions_percentage(annot_df, sequences, methylations, coverage_threshold, thrshold = thrshold)
+            res_meth_pct, res_pie_pct = get_genome_regions_percentage(annot_df, sequences, methylations, coverage_threshold, thrshold = thrshold)
             np.save('./saved_data/'+organism_name+'_thr_'+str(thrshold)+'_comp_res_meth_pct.npy', np.asarray(res_meth_pct))
             np.save('./saved_data/'+organism_name+'_thr_'+str(thrshold)+'_comp_res_pie_pct.npy', np.asarray(res_pie_pct))
     else:
-        res_meth_pct, res_pie_pct = methods.get_genome_regions_percentage(annot_df, sequences, methylations, coverage_threshold, thrshold = thrshold)
+        res_meth_pct, res_pie_pct = get_genome_regions_percentage(annot_df, sequences, methylations, coverage_threshold, thrshold = thrshold)
         np.save('./saved_data/'+organism_name+'_thr_'+str(thrshold)+'_comp_res_meth_pct.npy', np.asarray(res_meth_pct))
         np.save('./saved_data/'+organism_name+'_thr_'+str(thrshold)+'_comp_res_pie_pct.npy', np.asarray(res_pie_pct))
 

@@ -1,87 +1,77 @@
-def binarySearch(data, val):
-    highIndex = len(data)-1
-    lowIndex = 0
-    while highIndex > lowIndex:
-            index = int((highIndex + lowIndex) / 2)
-            sub = data[index]
-            if data[lowIndex] == val:
-                    return [lowIndex, lowIndex]
-            elif sub == val:
-                    return [index, index]
-            elif data[highIndex] == val:
-                    return [highIndex, highIndex]
-            elif sub > val:
-                    if highIndex == index:
-                            return sorted([highIndex, lowIndex])
-                    highIndex = index
-            else:
-                    if lowIndex == index:
-                            return sorted([highIndex, lowIndex])
-                    lowIndex = index
-    return sorted([highIndex, lowIndex])
+import pyMalaria.input_parser as input_parser
 
-def get_exon_boundry_meth_strs(annot_df, meth_seq, boundry_size = 150):
-    exons = []
-    for chro in meth_seq.keys():
-        exons_df = annot_df[(annot_df['type'] == 'exon') & (annot_df['chr'] == chro)].sort_values(by='start')
-        genes_df_chr = annot_df[(annot_df['type'] == 'gene') & (annot_df['chr'] == chro)].sort_values(by='start')
-        for index, row  in genes_df_chr.iterrows():
-            start_index = binarySearch(exons_df['start'].values ,  row['start'])[0]
-            gene_exons = []
-            while len(exons_df) > start_index and exons_df.iloc[start_index]['start'] >= row['start'] and exons_df.iloc[start_index]['end'] <= row['end']:
-                gene_exons.append((exons_df.iloc[start_index]['start'], exons_df.iloc[start_index]['end']))
-                start_index += 1
-            exons.append([chro, row['strand'],(row['start'], row['end']), gene_exons])
+import pyMalaria.density_plot as DP
+import pyMalaria.genome_area_dist_plot as GADP
+import pyMalaria.exon_boundry_plot as EBP
+import pyMalaria.gc_content as GCC
+import pyMalaria.gene_body_meth as GBM
+import pyMalaria.pie_plot as PP
 
-    exon5 = []
-    exon3 = []
-    for gene in exons:
-        gene_exons = gene[3]
-        if gene[1] == '+':
-            for i in range(len(gene_exons)):
-                exon_start = gene_exons[i][0]
-                exon_end = gene_exons[i][1]
-                chro = gene[0]
-                if i < len(gene_exons) - 1:
-                    interval = meth_seq[chro][max(exon_start, exon_end - boundry_size) : min(exon_end + boundry_size, gene_exons[i+1][0])]
-                    midpoint = exon_end - max(exon_start, exon_end - boundry_size)
-                    exon5.append((interval, midpoint))
-                if i > 0:
-                    interval = meth_seq[chro][max(exon_start - boundry_size, gene_exons[i-1][1]):min(exon_start + boundry_size , exon_end)]
-                    midpoint = exon_start - max(exon_start - boundry_size, gene_exons[i-1][1])
-                    exon3.append((interval, midpoint))
-
-        if gene[1] == '-':
-            for i in range(len(gene_exons)):
-                exon_start = gene_exons[i][0]
-                exon_end = gene_exons[i][1]
-                chro = gene[0]
-                if i > 0:
-                    interval = meth_seq[chro][max(gene_exons[i-1][1], exon_start - boundry_size):min(exon_start + boundry_size, exon_end)]
-                    midpoint = exon_start - max(gene_exons[i-1][1], exon_start - boundry_size)
-                    exon5.append((interval, midpoint))
-                if i < len(gene_exons) - 1:
-                    interval = meth_seq[chro][max(exon_end-boundry_size, exon_start):min(exon_end + boundry_size, gene_exons[i+1][0])]
-                    midpoint = exon_end - max(exon_end-boundry_size, exon_start)
-                    exon3.append((interval,midpoint))
-
-    return exon5, exon3
+pc_chromosomes = ['DF157093', 'DF157094', 'DF157095', 'DF157096', 'DF157097', 'DF157098', 'DF157099', 'DF157100', 'DF157101', 'DF157102', 'DF157103', 'DF157104', 'DF157105', 'DF157106']
+pv_chromosomes = ['PvP01_01_v1', 'PvP01_02_v1', 'PvP01_03_v1', 'PvP01_04_v1', 'PvP01_05_v1', 'PvP01_06_v1', 'PvP01_07_v1', 'PvP01_08_v1','PvP01_09_v1', 'PvP01_10_v1', 'PvP01_11_v1','PvP01_12_v1', 'PvP01_12_v1','PvP01_14_v1']
+pf_chromosomes = ['Pf3D7_01_v3', 'Pf3D7_02_v3', 'Pf3D7_03_v3', 'Pf3D7_04_v3', 'Pf3D7_05_v3', 'Pf3D7_06_v3', 'Pf3D7_07_v3', 'Pf3D7_08_v3', 'Pf3D7_09_v3', 'Pf3D7_10_v3', 'Pf3D7_11_v3', 'Pf3D7_12_v3', 'Pf3D7_13_v3', 'Pf3D7_14_v3']
 
 
-target = []
-for exon in exons:
-    if exon[1] == '+':
-        for j in range(len(exon[3]) - 1):
-            exon_start = exon[3][j][0]
-            exon_end = exon[3][j][1]
-            if sequences[exon[0]][exon[3][j][1] + 2] == 'G' and exon[3][j+1][0] - exon_end > boundry_size and exon_end - exon_start > boundry_size:
-                target = exon
-                break
-    else:
-        for j in range(1, len(exon[3])):
-            exon_start = exon[3][j][0]
-            exon_end = exon[3][j][1]
-            if sequences[exon[0]][exon[3][j][0] - 2] == 'G' and exon_start - exon[3][j-1][1] > boundry_size and exon_end - exon_start > boundry_size:
-                target = exon
-                break
+PC_config = {
+    'seq_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-48_PcynomolgiB_Genome.fasta',
+    'meth_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PC_merged.CX_report.txt',
+    'annot_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-50_PcynomolgiB.gff',
+    'coverage_threshold': 3,
+    'organism_name': 'PC',
+    'chromosomes': pc_chromosomes
+}
 
+PV_config = {
+    'seq_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-48_PvivaxP01_Genome.fasta',
+    'meth_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PV_excluded23.CX_report.txt',
+    'annot_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-48_PvivaxP01.gff',
+    'coverage_threshold': 10,
+    'organism_name': 'PV',
+    'chromosomes': pv_chromosomes
+}
+
+PF_config = {
+    'seq_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-48_Pfalciparum3D7_Genome.fasta',
+    'meth_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PF.CX_report.txt',
+    'annot_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-48_Pfalciparum3D7.gff',
+    'coverage_threshold': 10,
+    'organism_name': 'PF',
+    'chromosomes': pf_chromosomes
+}
+
+config = PF_config
+config['meth_threshold'] = 0.1
+
+organism_name = config['organism_name']
+coverage_threshold = config['coverage_threshold']
+meth_threshold = config['meth_threshold']
+chromosomes = config['chromosomes']
+
+
+
+def initialize(config):
+    sequences = input_parser.readfasta(config['seq_address'])
+    methylations = input_parser.read_methylations(config['meth_address'])
+    meth_seq, context_seq = input_parser.make_meth_string(methylations, sequences, config['coverage_threshold'])
+    annot_df = input_parser.read_annot(config['annot_address'])
+    genes_df = input_parser.subset_genes(annot_df)
+    return sequences, methylations, meth_seq, annot_df, genes_df
+
+
+
+
+def run():
+    sequences, methylations, meth_seq, annot_df, genes_df = initialize(config)
+    # DP.make_all_chromosome_density_plot(chromosomes, organism_name, meth_seq)
+
+    GADP.plot_meth_percent_genome_areas(organism_name, annot_df, sequences, methylations, coverage_threshold,
+                                thrshold=meth_threshold, from_file=False)
+
+    EBP.plot_exon_boundry_5(organism_name, annot_df, meth_seq, boundry=150, from_file=False)
+    EBP.plot_exon_boundry_3(organism_name, annot_df, meth_seq, boundry=150, from_file=False)
+
+    GCC.plot_cg_content_percentage(sequences, genes_df, 5, organism_name)
+
+    GBM.plot_gene_body_meth(organism_name, meth_seq, genes_df, 5)
+
+    PP.plot_meth_context_percentage(organism_name, methylations, coverage_threshold)

@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pyMalaria.methods as methods
-from scipy import ndimage
+import pyMalaria.gene_body_meth as GBM
 
 
 def rgb_to_hex(rgb):
@@ -87,13 +86,30 @@ def gene_cg_percentage(sequences, genes_df, bin_num):
 
 
 def get_average(genes_cg, flac_up_cg, flac_down_cg, genes_df, bin_num):
-    avg_cg_gene = methods.get_average(genes_cg, genes_df, bin_num, False)
-    avg_cg_up = methods.get_average(flac_up_cg, genes_df, bin_num, True)
-    avg_cg_down = methods.get_average(flac_down_cg, genes_df, bin_num, True)
+    avg_cg_gene = GBM.get_average(genes_cg, genes_df, bin_num, False)
+    avg_cg_up = GBM.get_average(flac_up_cg, genes_df, bin_num, True)
+    avg_cg_down = GBM.get_average(flac_down_cg, genes_df, bin_num, True)
 
     final = avg_cg_down + avg_cg_gene + avg_cg_up
 
     return final
+
+def compute_gc_content(genes_df, sequences):
+    count_c = 0
+    count_g = 0
+    count_all = 0
+    for index, row in genes_df.iterrows():
+        for i in range(row['start'] - 1, row['end'] - 1):
+            bp = sequences[row['chr']][i]
+            count_all += 1
+            if bp.upper() == 'C':
+                count_c += 1
+            if bp.upper() == 'G':
+                count_g += 1
+
+    return (float(count_c + count_g)) / count_all
+
+
 
 def plot_cg_content_percentage(sequences, genes_df, bin_num, organism_name):
     genes_cg, flac_up_cg, flac_down_cg = gene_cg_percentage(sequences, genes_df, bin_num)

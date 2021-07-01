@@ -1,5 +1,14 @@
 import matplotlib.pyplot as plt
-import pyMalaria.methods as methods
+
+def get_meth_context_percentage(methylations, coverage_thrshld):
+    temp = methylations[methylations.meth + methylations.unmeth >= coverage_thrshld]
+    temp = temp[temp.meth/ (temp.meth + temp.unmeth) > 0.1]
+    temp_cg = temp[temp.context == 'CG']
+    temp_chg = temp[temp.context == 'CHG']
+    temp_chh = temp[temp.context == 'CHH']
+    print('cg', 'chg', 'chh')
+    print(len(temp_cg) * 100 / len(temp), len(temp_chg) * 100 / len(temp), len(temp_chh) * 100 / len(temp))
+    return([len(temp_cg) * 100 / len(temp), len(temp_chg) * 100 / len(temp), len(temp_chh) * 100 / len(temp)])
 
 
 def rgb_to_hex(rgb):
@@ -9,7 +18,7 @@ def rgb_to_hex(rgb):
 
 def plot_meth_context_percentage(organism_name, methylations, coverage_threshold):
 
-    sizes = methods.get_meth_context_percentage(methylations, coverage_threshold)
+    sizes = get_meth_context_percentage(methylations, coverage_threshold)
     labels = ['CG', 'CHG', 'CHH']
     explode = (0.1, 0.1, 0)
     fig1, ax1 = plt.subplots()
