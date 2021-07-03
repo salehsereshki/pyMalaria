@@ -2,8 +2,9 @@ import methods as methods
 import exon_boundry_plot as EBP
 import gene_body_meth as GBM
 import pie_plot as PP
-
+import constants as constants
 import pyMalaria.temp as temp
+import numpy as np
 
 config = temp.PV_config
 
@@ -22,4 +23,5 @@ import pyMalaria.find_high_meth_regions as FHMR
 
 
 FHMR.run(meth_seq, annot_df, organism_name, chromosomes, meth_threshold = 0.1, meth_C_in_kbp = 30)
+
 

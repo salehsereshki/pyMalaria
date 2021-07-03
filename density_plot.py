@@ -102,6 +102,7 @@ def plot_density_Cs(organism_name, chro, meth_seq, threshold, chro_num, from_fil
     x = range(-50, len(count_Cs_p))
     c_p = pd.DataFrame(count_Cs_p)
     c_n = pd.DataFrame(count_Cs_n)
+
     c_p.columns = ['counts_p']
     c_n.columns = ['counts_n']
     df_c = pd.concat([c_p, c_n], axis=1)
@@ -114,6 +115,11 @@ def plot_density_Cs(organism_name, chro, meth_seq, threshold, chro_num, from_fil
     plt.yticks([-500, -250, 0, 250, 500], ['500', '250', '0', '250', '500'])
     plt.ylabel('$C$ count')
     plt.title('chromosome: ' + str(chro_num))
+    #plt.annotate('', xy =(centromere_index, 400),
+    #            xytext =(centromere_index, 500),
+    #            arrowprops = dict(facecolor ='black',
+    #                              shrink = 0.05),)
+
     plt.axhline(y=0.0, color='black', linestyle='-')
     plt.axvline(x=0.0, color='black', linestyle='-')
     plt.tight_layout()

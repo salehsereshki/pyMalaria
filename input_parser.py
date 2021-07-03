@@ -34,6 +34,7 @@ def check_annot_chro_names(annot_df, sequences):
 
 def subset_genes(annot_df):
     genes_df = annot_df[annot_df['type'] == 'gene']
+    genes_df = genes_df.reset_index(drop=True)
     return genes_df[['chr', 'strand', 'start', 'end']]
 
 def subset_exons(annot_df):
@@ -66,38 +67,21 @@ def make_exon_string(exons_df, sequences):
 
 
 def make_meth_string(methylations, sequences, coverage_thrshld):
+    methylations['mlevel'] = methylations['meth']/ (methylations['meth'] + methylations['unmeth'])
+    methylations['coverage'] = methylations['meth'] + methylations['unmeth']
+    methylations['mlevel'] = methylations['mlevel'].fillna(0)
+
+    methylations.loc[(methylations.mlevel == 0),'mlevel'] = constants.NON_METH_TAG
+    methylations.loc[(methylations.coverage < coverage_thrshld),'mlevel']= 0
+    methylations.loc[(methylations.strand == '-'),'mlevel']= -1 * methylations.mlevel
+
     meth_seq = {}
-    #context_seq = {}
     for chr in sequences.keys():
-        meth_seq[chr] = list(''.zfill(len(sequences[chr])))
-        #context_seq[chr] = list(''.zfill(len(sequences[chr])))
-    for index, row in methylations.iterrows():
-        meth_c = float(row['meth'])
-        unmeth_c = float(row['unmeth'])
-        coverage = meth_c + unmeth_c
-        strand = row['strand']
-        if meth_c > 0 and coverage >= coverage_thrshld:
-            if strand == '+':
-                meth_seq[row['chr']][row['position'] - 1] = meth_c / (meth_c + unmeth_c)
-            else:
-                meth_seq[row['chr']][row['position'] - 1] = -meth_c / (meth_c + unmeth_c)
-        elif coverage >= coverage_thrshld:
-            if strand == '+':
-                meth_seq[row['chr']][row['position'] - 1] = constants.NON_METH_TAG
-            else:
-                meth_seq[row['chr']][row['position'] - 1] = -1 * constants.NON_METH_TAG
-
-        #cntxt = row['context']
-        #    cntx_marker = '0'
-        #if cntxt == 'CG':
-        #    cntx_marker = '1'
-        #elif cntxt == 'CHG':
-        #    cntx_marker = '2'
-        #elif cntxt == 'CHH':
-        #    cntx_marker = '3'
-        #context_seq[row['chr']][row['position'] - 1] = cntx_marker
-    return meth_seq, None
-
+        meths = np.zeros(len(sequences[chr]))
+        meth_subset = methylations[methylations['chr'] == chr]
+        meths[[meth_subset['position'] - 1]] = meth_subset['mlevel']
+        meth_seq[chr] = meths
+    return meth_seq
 
 def make_gene_plus_flanking_string(genes_df, sequences):
     make_gene_plus_flanking = {}
