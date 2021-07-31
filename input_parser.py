@@ -35,6 +35,8 @@ def check_annot_chro_names(annot_df, sequences):
 def subset_genes(annot_df):
     genes_df = annot_df[annot_df['type'] == 'gene']
     genes_df = genes_df.reset_index(drop=True)
+    genes_df = genes_df.sort_values(['chr', 'start'], ascending=(True, True))
+    genes_df = genes_df.reset_index(drop=True)
     return genes_df[['chr', 'strand', 'start', 'end']]
 
 def subset_exons(annot_df):
@@ -71,9 +73,9 @@ def make_meth_string(methylations, sequences, coverage_thrshld):
     methylations['coverage'] = methylations['meth'] + methylations['unmeth']
     methylations['mlevel'] = methylations['mlevel'].fillna(0)
 
-    methylations.loc[(methylations.mlevel == 0),'mlevel'] = constants.NON_METH_TAG
+    methylations.loc[(methylations.mlevel == 0), 'mlevel'] = constants.NON_METH_TAG
     methylations.loc[(methylations.coverage < coverage_thrshld),'mlevel']= 0
-    methylations.loc[(methylations.strand == '-'),'mlevel']= -1 * methylations.mlevel
+    methylations.loc[(methylations.strand == '-'), 'mlevel']= -1 * methylations.mlevel
 
     meth_seq = {}
     for chr in sequences.keys():
@@ -82,6 +84,36 @@ def make_meth_string(methylations, sequences, coverage_thrshld):
         meths[[meth_subset['position'] - 1]] = meth_subset['mlevel']
         meth_seq[chr] = meths
     return meth_seq
+
+def make_meth_count_string(methylations, sequences):
+    #methylations['mlevel'] = methylations['meth']/ (methylations['meth'] + methylations['unmeth'])
+    #methylations['coverage'] = methylations['meth'] + methylations['unmeth']
+    #methylations['mlevel'] = methylations['mlevel'].fillna(0)
+
+    #methylations.loc[(methylations.mlevel == 0),'mlevel'] = constants.NON_METH_TAG
+    #methylations.loc[(methylations.coverage < coverage_thrshld),'mlevel']= 0
+    methylations = methylations.copy()
+    methylations.loc[(methylations.strand == '-'), 'meth'] = -1 * methylations.meth
+    methylations.loc[(methylations.strand == '-'), 'unmeth'] = -1 * methylations.unmeth
+
+    meth_count_seq = {}
+    unmeth_count_seq = {}
+    for chr in sequences.keys():
+
+        meth_subset = methylations[methylations['chr'] == chr]
+
+        meths = np.zeros(len(sequences[chr]))
+        meths[[meth_subset['position'] - 1]] = meth_subset['meth']
+        meth_count_seq[chr] = meths
+
+
+        unmeths = np.zeros(len(sequences[chr]))
+        unmeths[[meth_subset['position'] - 1]] = meth_subset['unmeth']
+        unmeth_count_seq[chr] = unmeths
+
+    return meth_count_seq, unmeth_count_seq
+
+
 
 def make_gene_plus_flanking_string(genes_df, sequences):
     make_gene_plus_flanking = {}

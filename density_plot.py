@@ -6,7 +6,7 @@ import numpy as np
 
 count_names = ['count_Cs_p', 'count_Cs_n', 'count_methCs_p', 'count_methCs_n']
 
-def get_density_vec(chro_name, meth_seq, thrshld):
+def get_density_vec(chro_name, meth_seq, sequences, thrshld):
     sliding_window = 1000
     chro = chro_name
     count_Cs_p = []
@@ -14,21 +14,22 @@ def get_density_vec(chro_name, meth_seq, thrshld):
     count_methCs_p = []
     count_methCs_n = []
     for i in range(0, len(meth_seq[chro]), sliding_window):
-        seq = meth_seq[chro]
+        m_seq = meth_seq[chro]
+        seq = sequences[chro]
         meth_c_p = 0
         meth_c_n = 0
         count_c_p = 0
         count_c_n = 0
         for j in range(i, i + sliding_window):
-            if j < len(seq):
-                if float(seq[j]) > thrshld:
+            if j < len(m_seq):
+                if float(m_seq[j]) > thrshld:
                     meth_c_p += 1
-                elif float(seq[j]) < -1 * thrshld:
+                elif float(m_seq[j]) < -1 * thrshld:
                     meth_c_n += 1
 
-                if float(seq[j]) > 0:
+                if seq[j] == 'C':
                     count_c_p += 1
-                elif float(seq[j]) < 0:
+                elif seq[j] == 'G':
                     count_c_n += 1
 
         count_methCs_p.append(meth_c_p)
