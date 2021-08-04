@@ -3,102 +3,6 @@ import pandas as pd
 import numpy as np
 import sys
 
-
-def gene_meth_percentage(meth_seq, genes_df,  bin_num, threshold = 0.1):
-    genes_df = genes_df.sort_values(['chr', 'start'], ascending=(True, True))
-    genes_df = genes_df.reset_index(drop=True)
-    genes_meth_p = []
-    genes_meth_n = []
-    flac_up_p = []
-    flac_up_n = []
-    flac_down_p = []
-    flac_down_n = []
-    sum_bin_sizes = np.zeros(bin_num)
-    for index, row in genes_df.iterrows():
-        start = row['start']
-        end = row['end']
-        strand = row['strand']
-        fp_start = end
-        fp_end = end + 500
-        fn_start = start - 500
-        fn_end = start
-        if strand == '-':
-            fp_start = start - 500
-            fp_end = start
-            fn_start = end
-            fn_end = end + 500
-        bin_size_f = int(500 / bin_num)
-        bin_size = int((end - start) / bin_num)
-        meths_p = []
-        meths_n = []
-        for i in range(bin_num):
-            s_i = int(i * bin_size) + start
-            e_i = int((i+1) * bin_size) + start
-            m_p, m_n = get_meth_percentage(meth_seq[row['chr']][s_i: e_i], threshold)
-            if m_p != None and m_n != None:
-                meths_p.append(m_p * bin_size)
-                meths_n.append(m_n * bin_size)
-                if strand == '+':
-                    sum_bin_sizes[i] += bin_size
-                else:
-                    sum_bin_sizes[bin_num - i - 1] += bin_size
-
-            else:
-                meths_p.append(None)
-                meths_n.append(None)
-        meth_up_p = []
-        meth_up_n = []
-        for i in range(fp_start, fp_end, int(bin_size_f)):
-            if i + bin_size_f <= fp_end:
-                m_p, m_n = get_meth_percentage(meth_seq[row['chr']][i : i + bin_size_f], threshold)
-                if m_p != None and m_n != None:
-                    if index < len(genes_df) - 1 and genes_df.iloc[index+1]['chr'] == row['chr'] and genes_df.iloc[index + 1]['start'] > fp_end:
-                        meth_up_p.append(m_p)
-                        meth_up_n.append(m_n)
-                    else:
-                        meth_up_p.append(None)
-                        meth_up_n.append(None)
-                else:
-                    meth_up_p.append(None)
-                    meth_up_n.append(None)
-        meth_down_p = []
-        meth_down_n = []
-        for i in range(fn_start, fn_end, int(bin_size_f)):
-            if i + bin_size_f <= fn_end:
-                m_p, m_n = get_meth_percentage(meth_seq[row['chr']][i : i + bin_size_f], threshold)
-                if m_p != None and m_n != None:
-                    if index > 0 and genes_df.iloc[index-1]['chr'] == row['chr'] and genes_df.iloc[index - 1]['end'] < fn_start:
-                        meth_down_p.append(m_p)
-                        meth_down_n.append(m_n)
-                    else:
-                        meth_down_p.append(None)
-                        meth_down_n.append(None)
-                else:
-                    meth_down_p.append(None)
-                    meth_down_n.append(None)
-            else:
-                print(i, i + bin_size_f, fn_end)
-        if strand == '-':
-            meths_p = meths_p[::-1]
-            meths_n = meths_n[::-1]
-            meth_up_p = meth_up_p[::-1]
-            meth_up_n = meth_up_n[::-1]
-            meth_down_p = meth_down_p[::-1]
-            meth_down_n = meth_down_n[::-1]
-        assert len(meths_p) == bin_num
-        assert len(meths_n) == bin_num
-        assert len(meth_up_p) == bin_num
-        assert len(meth_up_n) == bin_num
-        assert len(meth_down_p) == bin_num
-        assert len(meth_down_n) == bin_num
-        genes_meth_p.append(meths_p)
-        genes_meth_n.append(meths_n)
-        flac_up_p.append(meth_up_p)
-        flac_up_n.append(meth_up_n)
-        flac_down_p.append(meth_down_p)
-        flac_down_n.append(meth_down_n)
-    return genes_meth_p, genes_meth_n, flac_up_p, flac_up_n, flac_down_p, flac_down_n, sum_bin_sizes
-
 def get_gene_meth(meth_seq, genes_df,  bin_num, threshold = 0.1, flanking_size = 2000):
     genes_avg_p = np.zeros(bin_num, dtype=np.double)
     genes_avg_n = np.zeros(bin_num, dtype=np.double)
@@ -113,22 +17,22 @@ def get_gene_meth(meth_seq, genes_df,  bin_num, threshold = 0.1, flanking_size =
 
     for index, row in genes_df.iterrows():
         seq = meth_seq[row['chr']][row['start'] - flanking_size: row['end'] + flanking_size]
-        prev_gene_end = 0
-        next_gene_start = sys.maxint
-        if index != 0 and (genes_df.iloc[index-1]['chr'] == row['chr']):
-            prev_gene_end = genes_df[index - 1]['end']
-        if index != len(genes_df) and genes_df.iloc[index+1]['chr'] == row['chr']:
-            next_gene_start = genes_df[index + 1]['start']
+        #prev_gene_end = 0
+        #next_gene_start = sys.maxsize
+        #if index != 0 and (genes_df.iloc[index-1]['chr'] == row['chr']):
+        #    prev_gene_end = genes_df[index - 1]['end']
+        #if index != len(genes_df) and genes_df.iloc[index+1]['chr'] == row['chr']:
+        #    next_gene_start = genes_df[index + 1]['start']
 
         check_flac_down_overlap = (index == 0 or (genes_df.iloc[index-1]['chr'] == row['chr'] and genes_df.iloc[index - 1]['end'] < row['start'] - flanking_size))
         check_flac_up_overlap = (index == len(genes_df) - 1 or (genes_df.iloc[index+1]['chr'] == row['chr'] and genes_df.iloc[index + 1]['start'] > row['end'] + flanking_size))
 
-        if row['strand'] == '-':
-            seq = seq[::-1]
-            check_flac_down_overlap, check_flac_up_overlap = check_flac_up_overlap, check_flac_down_overlap
-            prev_gene_end, next_gene_start = next_gene_start, prev_gene_end
+        #if row['strand'] == '-':
+        #    seq = seq[::-1]
+        #    check_flac_down_overlap, check_flac_up_overlap = check_flac_up_overlap, check_flac_down_overlap
+            #prev_gene_end, next_gene_start = next_gene_start, prev_gene_end
 
-        flac_bin_size = int(500/bin_num)
+        flac_bin_size = int(flanking_size/bin_num)
         gene_bin_size = int((row['end'] - row['start'])/bin_num)
         for i in range(bin_num):
             m_p, m_n = get_meth_percentage(seq[i*flac_bin_size: (i+1) * flac_bin_size], threshold)
@@ -144,7 +48,7 @@ def get_gene_meth(meth_seq, genes_df,  bin_num, threshold = 0.1, flanking_size =
                 genes_avg_n[i] = update_mean(genes_avg_n[i], gene_bins_sum[i], m_n, gene_bin_size)
                 gene_bins_sum[i] += gene_bin_size
 
-            m_p, m_n = get_meth_percentage(seq[i*flac_bin_size + len(seq) - flanking_size: (i+1) * gene_bin_size + len(seq) - flanking_size], threshold)
+            m_p, m_n = get_meth_percentage(seq[i*flac_bin_size + len(seq) - flanking_size: (i+1) * flac_bin_size + len(seq) - flanking_size], threshold)
             if m_n != None and m_p != None and check_flac_up_overlap:
                 flac_up_avg_p[i] = update_mean(flac_up_avg_p[i], flac_up_bins_sum[i], m_p, flac_bin_size)
                 flac_up_avg_n[i] = update_mean(flac_up_avg_n[i], flac_up_bins_sum[i], m_n, flac_bin_size)
@@ -153,7 +57,7 @@ def get_gene_meth(meth_seq, genes_df,  bin_num, threshold = 0.1, flanking_size =
     return genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n
 
 
-def get_gene_meth_count_based(meth_count_seq, unmeth_count_seq,  genes_df,  bin_num, threshold = 0.1):
+def get_gene_meth_count_based(meth_count_seq, unmeth_count_seq,  genes_df,  bin_num, flanking_size = 2000):
     genes_avg_p = np.zeros(bin_num, dtype=np.double)
     genes_avg_n = np.zeros(bin_num, dtype=np.double)
     flac_up_avg_p = np.zeros(bin_num, dtype=np.double)
@@ -165,43 +69,191 @@ def get_gene_meth_count_based(meth_count_seq, unmeth_count_seq,  genes_df,  bin_
     flac_up_bins_sum = np.zeros(bin_num)
     flac_down_bins_sum = np.zeros(bin_num)
 
-    for index, row in genes_df.iterrows():
-        seq_meth = meth_count_seq[row['chr']][row['start'] - 500: row['end'] + 500]
-        seq_unmeth = unmeth_count_seq[row['chr']][row['start'] - 500: row['end'] + 500]
-        check_flac_down_overlap = (index == 0 or (genes_df.iloc[index-1]['chr'] == row['chr'] and genes_df.iloc[index - 1]['end'] < row['start'] - 500))
-        check_flac_up_overlap = (index == len(genes_df) - 1 or (genes_df.iloc[index+1]['chr'] == row['chr'] and genes_df.iloc[index + 1]['start'] > row['end'] + 500))
+    count_flac_down_overlap = 0
+    count_flac_up_overlap = 0
+    count_all = 0
 
-        if row['strand'] == '-':
-            seq_meth = seq_meth[::-1]
-            seq_unmeth = seq_unmeth[::-1]
-            check_flac_down_overlap, check_flac_up_overlap = check_flac_up_overlap, check_flac_down_overlap
-        flac_bin_size = int(500/bin_num)
-        gene_bin_size = int((row['end'] - row['start'])/bin_num)
-        for i in range(bin_num):
-            m_p, m_n = get_meth_percentage_count_based(seq_meth[i*flac_bin_size: (i+1) * flac_bin_size], seq_unmeth[i*flac_bin_size: (i+1) * flac_bin_size], threshold)
-            if m_n != None and m_p != None and check_flac_down_overlap:
-                if index == 0 or (genes_df.iloc[index-1]['chr'] == row['chr'] and genes_df.iloc[index - 1]['end'] < row['start'] - 500):
+    for index, row in genes_df.iterrows():
+        prev_gene_end = -1
+        next_gene_start = sys.maxsize
+
+        if index > 0 and genes_df.iloc[index-1]['chr'] == row['chr']:
+            prev_gene_end = genes_df.iloc[index-1]['end']
+        if index < len(genes_df)-1 and genes_df.iloc[index+1]['chr'] == row['chr']:
+            next_gene_start = genes_df.iloc[index+1]['start']
+
+        if False:
+            start_seq_position = max(row['start'] - flanking_size, prev_gene_end)
+            end_seq_position = min(row['end'] + flanking_size, next_gene_start)
+
+            seq_meth = meth_count_seq[row['chr']][start_seq_position: end_seq_position]
+            seq_unmeth = unmeth_count_seq[row['chr']][start_seq_position: end_seq_position]
+
+            # if row['strand'] == '-':
+            #     seq_meth = seq_meth[::-1]
+            #     seq_unmeth = seq_unmeth[::-1]
+
+            flac_bin_size = int(flanking_size/bin_num)
+            gene_bin_size = int((row['end'] - row['start'])/bin_num)
+
+            bin_start = row['start'] - start_seq_position - flac_bin_size
+            a = bin_start
+            i = bin_num - 1
+            while i >= 0 and bin_start > prev_gene_end:
+                m_p, m_n = get_meth_percentage_count_based(seq_meth[bin_start: bin_start + flac_bin_size], seq_unmeth[bin_start: bin_start + flac_bin_size])
+                if m_n != None and m_p != None:
+                    flac_down_avg_p[i] = update_mean(flac_down_avg_p[i], flac_down_bins_sum[i], m_p, flac_bin_size)
+                    flac_down_avg_n[i] = update_mean(flac_down_avg_n[i], flac_down_bins_sum[i], m_n, flac_bin_size)
+                    flac_down_bins_sum[i] += flac_bin_size
+                i = i - 1
+                bin_start = bin_start - flac_bin_size
+                if count_all == 0:
+                    print(bin_start)
+
+            bin_start = row['start'] - start_seq_position
+            b = bin_start
+            i = 0
+            while i < bin_num:
+                m_p, m_n = get_meth_percentage_count_based(seq_meth[bin_start: bin_start + gene_bin_size], seq_unmeth[bin_start: bin_start + gene_bin_size])
+                if m_n != None and m_p != None:
+                    genes_avg_p[i] = update_mean(genes_avg_p[i], gene_bins_sum[i], m_p, gene_bin_size)
+                    genes_avg_n[i] = update_mean(genes_avg_n[i], gene_bins_sum[i], m_n, gene_bin_size)
+                    gene_bins_sum[i] += gene_bin_size
+                i = i + 1
+                bin_start = bin_start + gene_bin_size
+                if count_all == 0:
+                    print(bin_start)
+
+            bin_start = len(seq_meth) - (end_seq_position - row['end'])
+            c = bin_start
+            i = 0
+            while i < bin_num and bin_start + flac_bin_size < next_gene_start:
+                m_p, m_n = get_meth_percentage_count_based(seq_meth[bin_start: bin_start + flac_bin_size], seq_unmeth[bin_start: bin_start + flac_bin_size])
+                if m_n != None and m_p != None:
+                    flac_up_avg_p[i] = update_mean(flac_up_avg_p[i], flac_up_bins_sum[i], m_p, flac_bin_size)
+                    flac_up_avg_n[i] = update_mean(flac_up_avg_n[i], flac_up_bins_sum[i], m_n, flac_bin_size)
+                    flac_up_bins_sum[i] += flac_bin_size
+                i = i + 1
+                bin_start = bin_start + flac_bin_size
+                if count_all == 0:
+                    print(bin_start)
+            if count_all < 1:
+                print(a, b, c, row['start'], row['end'], prev_gene_end, next_gene_start, len(seq_meth), len(seq_unmeth))
+                count_all+=1
+
+
+        else:
+            seq_meth = meth_count_seq[row['chr']][row['start'] - flanking_size: row['end'] + flanking_size]
+            seq_unmeth = unmeth_count_seq[row['chr']][row['start'] - flanking_size: row['end'] + flanking_size]
+            flac_bin_size = int(flanking_size/bin_num)
+            gene_bin_size = int((row['end'] - row['start'])/bin_num)
+            flac_down_num_binsoverlap = min((row['start'] - prev_gene_end)/flac_bin_size, bin_num)
+            flac_up_num_binsoverlap = min((next_gene_start - row['end'])/flac_bin_size, bin_num)
+
+            check_flac_down_overlap = (index == 0 or (genes_df.iloc[index-1]['chr'] == row['chr'] and genes_df.iloc[index - 1]['end'] < row['start'] - flanking_size))
+            check_flac_up_overlap = (index == len(genes_df) - 1 or (genes_df.iloc[index+1]['chr'] == row['chr'] and genes_df.iloc[index + 1]['start'] > row['end'] + flanking_size))
+
+            if check_flac_down_overlap:
+                count_flac_down_overlap += 1
+            if check_flac_up_overlap:
+                count_flac_up_overlap += 1
+            count_all += 1
+
+            if row['strand'] == '-':
+                seq_meth = seq_meth[::-1]
+                seq_unmeth = seq_unmeth[::-1]
+                check_flac_down_overlap, check_flac_up_overlap = check_flac_up_overlap, check_flac_down_overlap
+                flac_down_num_binsoverlap, flac_up_num_binsoverlap = flac_up_num_binsoverlap, flac_down_num_binsoverlap
+
+            for i in range(bin_num):
+                m_p, m_n = get_meth_percentage_count_based(seq_meth[i*flac_bin_size: (i+1) * flac_bin_size], seq_unmeth[i*flac_bin_size: (i+1) * flac_bin_size])
+                if m_n != None and m_p != None and i > bin_num - flac_down_num_binsoverlap - 1:
                     flac_down_avg_p[i] = update_mean(flac_down_avg_p[i], flac_down_bins_sum[i], m_p, flac_bin_size)
                     flac_down_avg_n[i] = update_mean(flac_down_avg_n[i], flac_down_bins_sum[i], m_n, flac_bin_size)
                     flac_down_bins_sum[i] += flac_bin_size
 
-            m_p, m_n = get_meth_percentage_count_based(seq_meth[i*gene_bin_size + 500: (i+1) * gene_bin_size + 500], seq_unmeth[i*gene_bin_size + 500: (i+1) * gene_bin_size + 500], threshold)
-            if m_n != None and m_p != None:
-                genes_avg_p[i] = update_mean(genes_avg_p[i], gene_bins_sum[i], m_p, gene_bin_size)
-                genes_avg_n[i] = update_mean(genes_avg_n[i], gene_bins_sum[i], m_n, gene_bin_size)
-                gene_bins_sum[i] += gene_bin_size
+                m_p, m_n = get_meth_percentage_count_based(seq_meth[i*gene_bin_size + flanking_size: (i+1) * gene_bin_size + flanking_size], seq_unmeth[i*gene_bin_size + flanking_size: (i+1) * gene_bin_size + flanking_size])
+                if m_n != None and m_p != None:
+                    genes_avg_p[i] = update_mean(genes_avg_p[i], gene_bins_sum[i], m_p, gene_bin_size)
+                    genes_avg_n[i] = update_mean(genes_avg_n[i], gene_bins_sum[i], m_n, gene_bin_size)
+                    gene_bins_sum[i] += gene_bin_size
 
-            m_p, m_n = get_meth_percentage_count_based(seq_meth[i*flac_bin_size + len(seq_meth) - 500: (i+1) * gene_bin_size + len(seq_meth) - 500], seq_unmeth[i*flac_bin_size + len(seq_unmeth) - 500: (i+1) * gene_bin_size + len(seq_unmeth) - 500], threshold)
-            if m_n != None and m_p != None and check_flac_up_overlap:
-                flac_up_avg_p[i] = update_mean(flac_up_avg_p[i], flac_up_bins_sum[i], m_p, flac_bin_size)
-                flac_up_avg_n[i] = update_mean(flac_up_avg_n[i], flac_up_bins_sum[i], m_n, flac_bin_size)
-                flac_up_bins_sum[i] += flac_bin_size
-
+                m_p, m_n = get_meth_percentage_count_based(seq_meth[i*flac_bin_size + len(seq_meth) - flanking_size: (i+1) * flac_bin_size + len(seq_meth) - flanking_size], seq_unmeth[i*flac_bin_size + len(seq_unmeth) - flanking_size: (i+1) * flac_bin_size + len(seq_unmeth) - flanking_size])
+                if m_n != None and m_p != None and i < flac_up_num_binsoverlap:
+                    flac_up_avg_p[i] = update_mean(flac_up_avg_p[i], flac_up_bins_sum[i], m_p, flac_bin_size)
+                    flac_up_avg_n[i] = update_mean(flac_up_avg_n[i], flac_up_bins_sum[i], m_n, flac_bin_size)
+                    flac_up_bins_sum[i] += flac_bin_size
+    print(count_flac_down_overlap, count_flac_up_overlap, count_all)
     return genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n
 
 
 def update_mean(mean, sum_weights, new_value, weight):
     return ((mean * sum_weights) + (new_value * weight)) / (sum_weights + weight)
+
+
+
+
+def get_gene_meth_count_based_average_bin(meth_count_seq, unmeth_count_seq,  genes_df,  bin_num, flanking_size = 2000):
+    genes_sumcounts_p = np.zeros([2, bin_num], dtype=np.double)
+    genes_sumcounts_n = np.zeros([2, bin_num], dtype=np.double)
+    flac_up_sumcounts_p = np.zeros([2, bin_num], dtype=np.double)
+    flac_up_sumcounts_n = np.zeros([2, bin_num], dtype=np.double)
+    flac_down_sumcounts_p = np.zeros([2, bin_num], dtype=np.double)
+    flac_down_sumcounts_n = np.zeros([2, bin_num], dtype=np.double)
+
+
+    for index, row in genes_df.iterrows():
+        seq_meth = meth_count_seq[row['chr']][row['start'] - flanking_size: row['end'] + flanking_size]
+        seq_unmeth = unmeth_count_seq[row['chr']][row['start'] - flanking_size: row['end'] + flanking_size]
+        check_flac_down_overlap = (index == 0 or (genes_df.iloc[index-1]['chr'] == row['chr'] and genes_df.iloc[index - 1]['end'] < row['start'] - flanking_size))
+        check_flac_up_overlap = (index == len(genes_df) - 1 or (genes_df.iloc[index+1]['chr'] == row['chr'] and genes_df.iloc[index + 1]['start'] > row['end'] + flanking_size))
+
+        #if row['strand'] == '-':
+            #seq_meth = seq_meth[::-1]
+            #seq_unmeth = seq_unmeth[::-1]
+            #check_flac_down_overlap, check_flac_up_overlap = check_flac_up_overlap, check_flac_down_overlap
+        flac_bin_size = int(flanking_size/bin_num)
+        gene_bin_size = int((row['end'] - row['start'])/bin_num)
+        for i in range(bin_num):
+            if check_flac_down_overlap:
+                sm = seq_meth[i*flac_bin_size: (i+1) * flac_bin_size]
+                sum = seq_unmeth[i*flac_bin_size: (i+1) * flac_bin_size]
+
+                flac_down_sumcounts_p[0][i] += np.sum(sm[sm > 0])
+                flac_down_sumcounts_p[1][i] += np.sum(sum[sum > 0])
+
+                flac_down_sumcounts_n[0][i] += np.sum(sm[sm < 0])
+                flac_down_sumcounts_n[1][i] += np.sum(sum[sum < 0])
+
+            sm = seq_meth[i*gene_bin_size + flanking_size: (i+1) * gene_bin_size + flanking_size]
+            sum = seq_unmeth[i*gene_bin_size + flanking_size: (i+1) * gene_bin_size + flanking_size]
+
+            genes_sumcounts_p[0][i] += np.sum(sm[sm > 0])
+            genes_sumcounts_p[1][i] += np.sum(sum[sum > 0])
+
+            genes_sumcounts_n[0][i] += np.sum(sm[sm < 0])
+            genes_sumcounts_n[1][i] += np.sum(sum[sum < 0])
+
+            if check_flac_up_overlap:
+                sm = seq_meth[i*flac_bin_size + len(seq_meth) - flanking_size: (i+1) * flac_bin_size + len(seq_meth) - flanking_size]
+                sum = seq_unmeth[i*flac_bin_size + len(seq_unmeth) - flanking_size: (i+1) * flac_bin_size + len(seq_unmeth) - flanking_size]
+
+                flac_up_sumcounts_p[0][i] += np.sum(sm[sm > 0])
+                flac_up_sumcounts_p[1][i] += np.sum(sum[sum > 0])
+
+                flac_up_sumcounts_n[0][i] += np.sum(sm[sm < 0])
+                flac_up_sumcounts_n[1][i] += np.sum(sum[sum < 0])
+
+
+    return avg_count(genes_sumcounts_p, bin_num), avg_count(genes_sumcounts_n, bin_num),\
+           avg_count(flac_up_sumcounts_p, bin_num), avg_count(flac_up_sumcounts_n, bin_num),\
+           avg_count(flac_down_sumcounts_p, bin_num), avg_count(flac_down_sumcounts_n, bin_num)
+
+def avg_count(sum_count, bin_num):
+    avgs = np.zeros(bin_num, dtype=np.double)
+    for i in range(bin_num):
+        avgs[i] = sum_count[0][i] / (sum_count[0][i] + sum_count[1][i])
+    return avgs
 
 def strand_specific_meth(organism_name, methylations, genes_seq, threshold, coverage_threshold):
     genes_same_C = 0
@@ -333,7 +385,7 @@ def get_meth_percentage(meth_stat, threshold):
     else:
         return None, None
 
-def get_meth_percentage_count_based(meth_stat, unmeth_state, threshold):
+def get_meth_percentage_count_based(meth_stat, unmeth_state):
 
     counts_meth_p = 0
     counts_unmeth_p = 0
@@ -353,8 +405,8 @@ def get_meth_percentage_count_based(meth_stat, unmeth_state, threshold):
         else:
             counts_unmeth_n += -1 * i
 
-    if counts_meth_p + counts_unmeth_p != 0 and counts_meth_n + counts_unmeth_n != 0:
-        return float(counts_meth_p)/ (counts_meth_p + counts_unmeth_p), float(counts_meth_n)/ (counts_meth_n + counts_unmeth_n)
+    if counts_meth_p+counts_unmeth_p != 0 and counts_meth_n+counts_unmeth_n != 0:
+        return float(counts_meth_p)/ (counts_meth_p+counts_unmeth_p), float(counts_meth_n)/ (counts_meth_n+counts_unmeth_n)
     else:
         return None, None
 
@@ -373,30 +425,19 @@ def get_average(meth_profs_df, is_flanking, bin_num, sum_bin_sizes = None):
 
 
 def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, threshold = 0.1):
-    # genes_meth_p, genes_meth_n, flac_up_p, flac_up_n, flac_down_p, flac_down_n, sum_bin_sizes = gene_meth_percentage(meth_seq,
-    #                                                                                                           genes_df,
-    #                                                                                                           bin_num)
-    # # Eech list is consist of all the genes methylation level in each bin. For Gene Body each the vector of size bin_num showing the #mec/#C * bin_size for that gene
-    # # For Flanking Regions the numbers showing the #meC/#C
-    # avg_meth_gene_p = get_average(genes_meth_p, False, bin_num, sum_bin_sizes=sum_bin_sizes)
-    # avg_meth_gene_n = get_average(genes_meth_n,  False, bin_num, sum_bin_sizes=sum_bin_sizes)
-    # avg_meth_up_p = get_average(flac_up_p, True, bin_num)
-    # avg_meth_up_n = get_average(flac_up_n, True, bin_num)
-    # avg_meth_down_p = get_average(flac_down_p, True, bin_num)
-    # avg_meth_down_n = get_average(flac_down_n, True, bin_num)
-    #
-    # final_p = avg_meth_down_p + avg_meth_gene_p + avg_meth_up_p
-    # final_n = avg_meth_down_n + avg_meth_gene_n + avg_meth_up_n
-
-    genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = get_gene_meth(meth_seq, genes_df,  bin_num, threshold = threshold)
+    if len(meth_seq) == 2:
+        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = get_gene_meth_count_based(meth_seq[0], meth_seq[1], genes_df,  bin_num)
+    else:
+        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = get_gene_meth(meth_seq, genes_df,  bin_num, threshold = threshold)
 
     final_p = np.concatenate((flac_down_avg_p , genes_avg_p , flac_up_avg_p))
     final_n = np.concatenate((flac_down_avg_n , genes_avg_n , flac_up_avg_n))
-
+    print(final_p)
+    print(final_n)
     # yticks = [0]
     # ylabels = ['']
     # plt.yticks(yticks, ylabels)
-    plt.tick_params(left=False, labelleft=False)
+    #plt.tick_params(left=False, labelleft=False)
     plt.box(False)
     plt.ylabel("$meC/C$")
     ticks = [0, bin_num, bin_num * 2, bin_num * 3]
