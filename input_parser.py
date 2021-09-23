@@ -85,6 +85,22 @@ def make_meth_string(methylations, sequences, coverage_thrshld):
         meth_seq[chr] = meths
     return meth_seq
 
+def make_meth_string_plus_no_coverage(methylations, sequences):
+    methylations['mlevel'] = methylations['meth']/ (methylations['meth'] + methylations['unmeth'])
+    methylations['coverage'] = methylations['meth'] + methylations['unmeth']
+    methylations['mlevel'] = methylations['mlevel'].fillna(0)
+
+    methylations.loc[(methylations.mlevel == 0), 'mlevel'] = constants.NON_METH_TAG
+    methylations.loc[(methylations.strand == '-'), 'mlevel']= -1 * methylations.mlevel
+
+    meth_seq = {}
+    for chr in sequences.keys():
+        meths = np.zeros(len(sequences[chr]))
+        meth_subset = methylations[methylations['chr'] == chr]
+        meths[[meth_subset['position'] - 1]] = meth_subset['mlevel']
+        meth_seq[chr] = meths
+    return meth_seq
+
 def make_meth_count_string(methylations, sequences):
     #methylations['mlevel'] = methylations['meth']/ (methylations['meth'] + methylations['unmeth'])
     #methylations['coverage'] = methylations['meth'] + methylations['unmeth']

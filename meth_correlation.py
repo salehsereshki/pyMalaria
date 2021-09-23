@@ -1,23 +1,22 @@
-import pyMalaria.configs
+
 import methods
 import numpy as np
 from scipy.stats import pearsonr
 import pyMalaria.input_parser as input_parser
 import pyMalaria.constants as constants
+import pyMalaria.configs as configs
 import glob
-
 
 def get_pearson_mtx(meht_address_lst, seq_address, config):
     sample_meths = []
     sequences = input_parser.readfasta(seq_address)
     chros = list(sequences.keys())
     for i in meht_address_lst:
-        sequences = input_parser.readfasta(seq_address)
         methylations = input_parser.read_methylations(meht_address_lst[i])
         meth_seq = input_parser.make_meth_string(methylations, sequences, config['coverage_threshold'])
-        meth_str = []
+        meth_str = np.asarray([])
         for chro in (chros):
-            meth_str = meth_str + meth_seq[chro]
+            meth_str = np.concatenate((meth_str, meth_seq[chro]), axis=0)
         sample_meths.append(meth_str)
 
         print('smple meth seq generated', i)
@@ -43,7 +42,12 @@ root_address = '/home/ssere004/Malaria/merge/extractor/' + config['organism_name
 
 meth_address_list = glob.glob(root_address + "/*CX_report.txt")
 print(meth_address_list)
-seq_address = config['seq_address']
+seq_address = '/home/ssere004/Malaria/genome_assembelies/Plasmodium_vivax/V1/PlasmoDB-48_PvivaxP01_Genome.fasta'
 
 print(get_pearson_mtx(meth_address_list, seq_address, config))
 
+
+meth_str = np.asarray([])
+for chro in (chros):
+    meth_str = np.concatenate((meth_str, meth_seq[chro]), axis=0)
+sample_meths.append(meth_str)

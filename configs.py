@@ -25,7 +25,7 @@ PV_config = {
     'seq_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-48_PvivaxP01_Genome.fasta',
     'meth_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PV_excluded23.CX_report.txt',
     'annot_address': '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PlasmoDB-48_PvivaxP01.gff',
-    'coverage_threshold': 10,
+    'coverage_threshold': 5,
     'organism_name': 'PV',
     'chromosomes': pv_chromosomes
 }

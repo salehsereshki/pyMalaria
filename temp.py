@@ -191,7 +191,7 @@ def plot_gene_body_box_plot(bins_counts, organism_name, region):
     return data_p, data_n
 
 
-def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, mode, threshold = 0.1, flanking_size = 2000, exp_filter=0):
+def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, mode, threshold = 0.1, flanking_size = 500, exp_filter=0):
     if mode == 1:
         genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based_average_bin(meth_seq[0], meth_seq[1], genes_df,  bin_num, flanking_size=flanking_size)
     if mode == 2:
@@ -206,22 +206,25 @@ def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, mode, thresh
     final_n = np.concatenate((flac_down_avg_n , genes_avg_n , flac_up_avg_n))
     #print(final_p)
     #print(final_n)
-    # yticks = [0]
-    # ylabels = ['']
-    # plt.yticks(yticks, ylabels)
+    font_size = 16
+    yticks = [i*0.002 for i in range(7)]
+    ylabels = [str(i*2) for i in range(7)]
+    plt.yticks(yticks, ylabels, fontsize=font_size)
     #plt.tick_params(left=False, labelleft=False)
     plt.box(False)
-    plt.ylabel("$meC/C$")
+    plt.ylabel("$meC/C(*10^3)$", fontsize=font_size)
     ticks = [0, bin_num, bin_num * 2, bin_num * 3]
-    labels = ['      5\' flanking region', '           gene body', '       3\' flanking region', '']
-    plt.xticks(ticks, labels, horizontalalignment='left')
+    labels = ['   5\' flanking region', '        gene body', '   3\' flanking region', '']
+    plt.xticks(ticks, labels, horizontalalignment='left', fontsize=font_size)
     # plt.tick_params(axis='x', colors='black', direction='out', length=10, width=1,  pad = 4)
     plt.grid(False)
     plt.style.use('seaborn')
-    plt.plot(range(0, 3 * bin_num), final_p, color='blue', linewidth=4.0)
-    plt.plot(range(0, 3 * bin_num), final_n, color='red', linewidth=4.0)
+    plt.plot(range(0, 3 * bin_num), final_p, color='blue', linewidth=5.0)
+    plt.plot(range(0, 3 * bin_num), final_n, color='red', linewidth=5.0)
     plt.axhline(y=0.0, color='black', linestyle='-')
     plt.axvline(x=0.0, color='black', linestyle='-')
+    plt.axvline(x=5.0, color='black', linestyle='--')
+    plt.axvline(x=10.0, color='black', linestyle='--')
     plt.rcParams['axes.facecolor'] = 'white'
     exp_filter_tag = ''
     if exp_filter != 0:
