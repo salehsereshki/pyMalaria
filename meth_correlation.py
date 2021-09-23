@@ -1,10 +1,9 @@
-
+import configs
 import methods
 import numpy as np
 from scipy.stats import pearsonr
-import pyMalaria.input_parser as input_parser
-import pyMalaria.constants as constants
-import pyMalaria.configs as configs
+import input_parser as input_parser
+import constants as constants
 import glob
 
 def get_pearson_mtx(meht_address_lst, seq_address, config):
@@ -46,8 +45,3 @@ seq_address = '/home/ssere004/Malaria/genome_assembelies/Plasmodium_vivax/V1/Pla
 
 print(get_pearson_mtx(meth_address_list, seq_address, config))
 
-
-meth_str = np.asarray([])
-for chro in (chros):
-    meth_str = np.concatenate((meth_str, meth_seq[chro]), axis=0)
-sample_meths.append(meth_str)

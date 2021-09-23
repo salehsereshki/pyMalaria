@@ -1,7 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pyMalaria.input_parser as input_parser
+import input_parser as input_parser
 
 
 def get_genome_regions_percentage(annot_df, sequences, methylations, coverage_threshold, thrshold = 0.1):

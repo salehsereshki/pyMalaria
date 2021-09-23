@@ -1,7 +1,7 @@
 from Bio import SeqIO
 import pandas as pd
 import numpy as np
-import pyMalaria.constants as constants
+import constants as constants
 
 def readfasta(address):
     cowpeaRecords = SeqIO.parse(address, "fasta")

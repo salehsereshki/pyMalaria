@@ -1,5 +1,5 @@
 import pandas as pd
-import sys
+
 
 def get_genomewide_meth(address):
     methylations = pd.read_table(address)

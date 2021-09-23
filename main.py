@@ -1,9 +1,7 @@
 import methods
-from scipy.stats import pearsonr
 from os import listdir
 from os.path import isfile, join
 import numpy as np
-import pandas as pd
 
 
 pc_meth_adrss = [f for f in listdir('./') if isfile(join('./', f))]
@@ -47,7 +45,7 @@ for i in range(len(seq_addresses)):
 
 #get_gene_meth_count(seq_address2, meth_address2, annot_address2)
 
-import pyMalaria.methods as methods
+import methods as methods
 sequences = methods.readfasta(seq_address_pv)
 methylations = methods.read_methylations(meth_address_pv)
 # for PC gene methylation put threshold 3 for PV put threshold 10
@@ -61,7 +59,7 @@ pv_chromosomes = ['PvP01_01_v1', 'PvP01_02_v1', 'PvP01_03_v1', 'PvP01_04_v1', 'P
 pf_chromosomes = ['Pf3D7_01_v3', 'Pf3D7_02_v3', 'Pf3D7_03_v3', 'Pf3D7_04_v3', 'Pf3D7_05_v3', 'Pf3D7_06_v3', 'Pf3D7_07_v3', 'Pf3D7_08_v3', 'Pf3D7_09_v3', 'Pf3D7_10_v3', 'Pf3D7_11_v3', 'Pf3D7_12_v3', 'Pf3D7_13_v3', 'Pf3D7_14_v3']
 
 
-import pyMalaria.density_plot as DP
+import density_plot as DP
 thresholds = [0.1]
 for i in range(len(pv_chromosomes)):
         DP.plot_density_Cs(organism_name, pc_chromosomes[i], meth_seq, thresholds[0], i+1)
@@ -69,12 +67,12 @@ for i in range(len(pv_chromosomes)):
             DP.plot_density_methCs(organism_name, pv_chromosomes[i], meth_seq, thrs, i+1)
 
 
-import pyMalaria.exon_boundry_plot as EBP
+import exon_boundry_plot as EBP
 
 EBP.plot_exon_boundry_5(organism_name, annot_df, meth_seq, boundry=150, from_file=False)
 EBP.plot_exon_boundry_3(organism_name, annot_df, meth_seq, boundry=150, from_file=False)
 
-import pyMalaria.gene_body_meth as GBM
+import gene_body_meth as GBM
 GBM.plot_gene_body_meth(organism_name, meth_seq, genes_df, 5)
 
 
