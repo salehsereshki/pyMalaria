@@ -317,6 +317,7 @@ def get_gene_meth(meth_seq, genes_df,  bin_num, exp_prcnt, threshold = 0.1, flan
 
 #Count_base, flac_num_bin_overlap, all weights are one, method5
 def get_gene_meth_count_based3(meth_count_seq, unmeth_count_seq,  genes_df,  bin_num, flanking_size = 2000):
+    print('5')
     genes_avg_p = np.zeros(bin_num, dtype=np.double)
     genes_avg_n = np.zeros(bin_num, dtype=np.double)
     flac_up_avg_p = np.zeros(bin_num, dtype=np.double)
@@ -376,6 +377,7 @@ def get_gene_meth_count_based3(meth_count_seq, unmeth_count_seq,  genes_df,  bin
                 flac_up_avg_p[i] = update_mean(flac_up_avg_p[i], flac_up_bins_sum[i], m_p, 1)
                 flac_up_avg_n[i] = update_mean(flac_up_avg_n[i], flac_up_bins_sum[i], m_n, 1)
                 flac_up_bins_sum[i] += 1
+
     return genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n
 
 def template_methylation(meth_seq, genes_df, threshold=0.1):

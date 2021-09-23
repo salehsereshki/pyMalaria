@@ -1,6 +1,6 @@
-import pyMalaria.exon_boundry_plot as EBP
+import exon_boundry_plot as EBP
 import pandas as pd
-import pyMalaria.density_plot as DP
+import density_plot as DP
 
 def get_high_meth_intervals(count_meth_p, counts_meth_n, methC_in_kpb = 30):
     intervals = []

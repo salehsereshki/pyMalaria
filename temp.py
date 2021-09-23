@@ -1,9 +1,9 @@
-import pyMalaria.configs as configs
-import pyMalaria.gene_body_meth as GBM
+import configs as configs
+import gene_body_meth as GBM
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-import pyMalaria.gbm_computations as gbmc
+import gbm_computations as gbmc
 import pandas as pd
 import seaborn as sns
 
@@ -77,6 +77,8 @@ def get_gene_flac_bins_counts_df(meth_count_seq, unmeth_count_seq,  genes_df,  b
             i = i + 1
             bin_start = bin_start + gene_bin_size
         genes_counts[index][4 * bin_num] = gene_bin_size
+        if gene_bin_size == 759:
+            print(row, genes_counts[index][2 * bin_num + 1])
 
         if row['strand'] == '+':
             bin_start = len(seq_meth) - (end_seq_position - row['end'])

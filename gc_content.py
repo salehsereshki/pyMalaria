@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pyMalaria.gene_body_meth as GBM
+import gene_body_meth as GBM
 
 
 def rgb_to_hex(rgb):

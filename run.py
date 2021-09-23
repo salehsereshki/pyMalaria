@@ -3,8 +3,8 @@ import exon_boundry_plot as EBP
 import gene_body_meth as GBM
 import pie_plot as PP
 import constants as constants
-import pyMalaria.configs as configs
-import pyMalaria.input_parser as IP
+import configs as configs
+import input_parser as IP
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,16 +14,16 @@ sequences, methylations, meth_seq, annot_df, genes_df = configs.initialize(confi
 
 meth_count_seq, unmeth_count_seq = IP.make_meth_count_string(methylations, sequences)
 
-import pyMalaria.find_high_meth_regions as FHMR
+import find_high_meth_regions as FHMR
 
 
 
 FHMR.run(meth_seq, annot_df, organism_name, chromosomes, meth_threshold = 0.1, meth_C_in_kbp = 30)
 
 
-import pyMalaria.gene_body_meth as GBM
+import gene_body_meth as GBM
 
-import pyMalaria.temp as tmp
+import temp as tmp
 
 tmp.plot_gene_body_meth(organism_name, [meth_count_seq, unmeth_count_seq], genes_df, 5, 1, threshold = 0.1)
 tmp.plot_gene_body_meth(organism_name, [meth_count_seq, unmeth_count_seq], genes_df, 5, 2, threshold = 0.1)
