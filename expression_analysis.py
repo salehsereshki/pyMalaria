@@ -1,4 +1,4 @@
-import pyMalaria.input_parser as IP
+import input_parser as IP
 
 def get_most_expressed_genes(annot_df, rna_address, percentage):
     exp_df = IP.get_expression(rna_address, annot_df)

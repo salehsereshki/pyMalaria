@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import sys
-import pyMalaria.gbm_computations as gbmc
+import gbm_computations as gbmc
 
 def get_gene_meth(meth_seq, genes_df,  bin_num, threshold = 0.1, flanking_size = 2000):
     genes_avg_p = np.zeros(bin_num, dtype=np.double)
