@@ -13,7 +13,7 @@ def get_pearson_mtx(meht_address_lst, seq_address, config):
     chros = list(sequences.keys())
     for i in meht_address_lst:
         sequences = input_parser.readfasta(seq_address)
-        methylations = input_parser.read_methylations(meht_address_lst[i])
+        methylations = input_parser.read_methylations(i)
         meth_seq = input_parser.make_meth_string(methylations, sequences, config['coverage_threshold'])
         meth_str = []
         for chro in (chros):
