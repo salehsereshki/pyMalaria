@@ -1,20 +1,25 @@
+import configs
 import methods
 import numpy as np
 from scipy.stats import pearsonr
 import input_parser as input_parser
 import constants as constants
+import glob
 
-def get_pearson_mtx(meht_address_lst, seq_address):
+
+def get_pearson_mtx(meht_address_lst, seq_address, config):
     sample_meths = []
     sequences = input_parser.readfasta(seq_address)
     chros = list(sequences.keys())
     for i in meht_address_lst:
-        methylations = input_parser.read_methylations(i)
-        meth_seq , context_seq = input_parser.make_meth_string(methylations, sequences, 1)
+        sequences = input_parser.readfasta(seq_address)
+        methylations = input_parser.read_methylations(meht_address_lst[i])
+        meth_seq = input_parser.make_meth_string(methylations, sequences, config['coverage_threshold'])
         meth_str = []
         for chro in (chros):
             meth_str = meth_str + meth_seq[chro]
         sample_meths.append(meth_str)
+
         print('smple meth seq generated', i)
     print('sample meth seq generating finished')
     for i in range(len(sample_meths)):
@@ -31,3 +36,14 @@ def get_pearson_mtx(meht_address_lst, seq_address):
             row.append(corr)
         corr_mtx.append(row)
     return corr_mtx
+
+
+config = configs.PV_config
+root_address = '/home/ssere004/Malaria/merge/extractor/' + config['organism_name']
+
+meth_address_list = glob.glob(root_address + "/*CX_report.txt")
+print(meth_address_list)
+seq_address = config['seq_address']
+
+print(get_pearson_mtx(meth_address_list, seq_address, config))
+
