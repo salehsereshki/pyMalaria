@@ -15,9 +15,9 @@ def get_pearson_mtx(meht_address_lst, seq_address, config):
         sequences = input_parser.readfasta(seq_address)
         methylations = input_parser.read_methylations(i)
         meth_seq = input_parser.make_meth_string(methylations, sequences, config['coverage_threshold'])
-        meth_str = []
+        meth_str = np.asarray([])
         for chro in (chros):
-            meth_str = meth_str + meth_seq[chro]
+            meth_str = np.concatenate((meth_str,meth_seq[chro]), axis=0)
         sample_meths.append(meth_str)
 
         print('smple meth seq generated', i)
