@@ -43,7 +43,7 @@ root_address = '/home/ssere004/Malaria/merge/extractor/' + config['organism_name
 
 meth_address_list = glob.glob(root_address + "/*CX_report.txt")
 print(meth_address_list)
-seq_address = config['seq_address']
+seq_address = '/home/ssere004/Malaria/genome_assembelies/Plasmodium_vivax/V1/PlasmoDB-48_PvivaxP01_Genome.fasta'
 
 print(get_pearson_mtx(meth_address_list, seq_address, config))
 
