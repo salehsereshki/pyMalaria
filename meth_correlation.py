@@ -1,9 +1,9 @@
-import pyMalaria.configs
+import configs
 import methods
 import numpy as np
 from scipy.stats import pearsonr
-import pyMalaria.input_parser as input_parser
-import pyMalaria.constants as constants
+import input_parser as input_parser
+import constants as constants
 import glob
 
 
