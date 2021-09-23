@@ -74,7 +74,7 @@ def make_meth_string(methylations, sequences, coverage_thrshld):
     methylations['mlevel'] = methylations['mlevel'].fillna(0)
 
     methylations.loc[(methylations.mlevel == 0), 'mlevel'] = constants.NON_METH_TAG
-    methylations.loc[(methylations.coverage < coverage_thrshld),'mlevel']= 0
+    methylations.loc[(methylations.coverage < coverage_thrshld),'mlevel'] = 0
     methylations.loc[(methylations.strand == '-'), 'mlevel']= -1 * methylations.mlevel
 
     meth_seq = {}
@@ -115,7 +115,7 @@ def make_meth_count_string(methylations, sequences):
 
 
 
-def make_gene_plus_flanking_string(genes_df, sequences):
+def make_gene_plus_flanking_string(genes_df, sequences, flanking_size = 500):
     make_gene_plus_flanking = {}
     for chr in sequences.keys():
         make_gene_plus_flanking[chr] = list(''.zfill(len(sequences[chr])))
@@ -123,7 +123,35 @@ def make_gene_plus_flanking_string(genes_df, sequences):
         gene_marker = '1'
         if row['strand'] == '-':
             gene_marker = '-1'
-        for i in range(int(row['start']) - 500, int(row['end']) + 500):
+        for i in range(int(row['start']) - flanking_size, int(row['end']) + flanking_size):
             if i < len(make_gene_plus_flanking[row['chr']]) and i > 0:
                 make_gene_plus_flanking[row['chr']][i] = gene_marker
     return make_gene_plus_flanking
+
+
+def read_expression(address):
+    file = open(address, 'r')
+    lines = file.readlines()
+
+    res = []
+    for index, line in enumerate(lines):
+        res.append([line.split()[0], float(line.split()[-2]), float(line.split()[-1])])
+
+    return pd.DataFrame(res, columns=['ID', 'len', 'expression'])
+
+def get_genes_df_plus_ID(annot_df):
+    genes_df = annot_df[annot_df['type'] == 'gene']
+    genes_df = genes_df.reset_index(drop=True)
+    genes_df[['ID','description']] = genes_df.attributes.str.split(';', expand=True)
+    genes_df[['IDD','gID']] = genes_df.ID.str.split('=', expand=True)
+    genes_df = genes_df[['chr', 'start', 'end','strand', 'gID']]
+    genes_df.columns = ['chr', 'start', 'end', 'strand', 'ID']
+    return genes_df
+
+def get_expression(rna_address, annot_df):
+    rna_exp = read_expression(rna_address)
+    genes_df = get_genes_df_plus_ID(annot_df)
+    exp_df = pd.merge(genes_df, rna_exp, on='ID')
+    exp_df = exp_df.sort_values(by='expression') #this sort increasing, 0 at first max at end
+    exp_df = exp_df.reset_index(drop=True)
+    return exp_df

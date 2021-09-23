@@ -191,22 +191,21 @@ def plot_gene_body_box_plot(bins_counts, organism_name, region):
     return data_p, data_n
 
 
-def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, mode, threshold = 0.1):
-
+def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, mode, threshold = 0.1, flanking_size = 2000, exp_filter=0):
     if mode == 1:
-        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based_average_bin(meth_seq[0], meth_seq[1], genes_df,  bin_num)
+        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based_average_bin(meth_seq[0], meth_seq[1], genes_df,  bin_num, flanking_size=flanking_size)
     if mode == 2:
-        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based1(meth_seq[0], meth_seq[1], genes_df,  bin_num)
+        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based1(meth_seq[0], meth_seq[1], genes_df,  bin_num, flanking_size=flanking_size)
     if mode == 3:
-        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based2(meth_seq[0], meth_seq[1], genes_df,  bin_num)
+        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based2(meth_seq[0], meth_seq[1], genes_df,  bin_num, flanking_size=flanking_size)
     if mode == 4:
-        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth(meth_seq, genes_df,  bin_num, threshold=threshold)
+        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth(meth_seq, genes_df,  bin_num, exp_filter, threshold=threshold, flanking_size=flanking_size)
     if mode == 5:
-        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based3(meth_seq[0], meth_seq[1], genes_df,  bin_num)
+        genes_avg_p, genes_avg_n, flac_up_avg_p, flac_up_avg_n, flac_down_avg_p, flac_down_avg_n = gbmc.get_gene_meth_count_based3(meth_seq[0], meth_seq[1], genes_df,  bin_num, flanking_size=flanking_size)
     final_p = np.concatenate((flac_down_avg_p , genes_avg_p , flac_up_avg_p))
     final_n = np.concatenate((flac_down_avg_n , genes_avg_n , flac_up_avg_n))
-    print(final_p)
-    print(final_n)
+    #print(final_p)
+    #print(final_n)
     # yticks = [0]
     # ylabels = ['']
     # plt.yticks(yticks, ylabels)
@@ -224,7 +223,17 @@ def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, mode, thresh
     plt.axhline(y=0.0, color='black', linestyle='-')
     plt.axvline(x=0.0, color='black', linestyle='-')
     plt.rcParams['axes.facecolor'] = 'white'
-    plt.savefig('genebody_' + str(organism_name) +'-method' + str(mode)+ '.jpg', dpi=2000)
+    exp_filter_tag = ''
+    if exp_filter != 0:
+        if exp_filter > 0:
+            exp_filter_tag = str(exp_filter)+'high_expr'
+        else:
+            exp_filter_tag = str( -1 * exp_filter)+'low_expr'
+
+    if mode != 4:
+        plt.savefig('genebody_' + str(organism_name) +'_method' + str(mode)+'_fs'+str(flanking_size)+'.jpg', dpi=2000)
+    else:
+        plt.savefig('genebody_' + str(organism_name) +'_method' + str(mode)+ '_thrsh'+ str(threshold)+'_fs'+str(flanking_size)+exp_filter_tag+'.jpg', dpi=2000)
     plt.close()
 
 
@@ -233,20 +242,4 @@ def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, mode, thresh
 
 
 
-# sums = []
-# for c in columns:
-#     if c != 'bin_size':
-#         sums.append(genes_counts[c].sum())
-#
-# avg_p = []
-# avg_n = []
-#
-# for i in range(5):
-#     avg_p.append(sums[i]/ (sums[i]+sums[i+5]))
-#     avg_n.append(sums[i+10]/ (sums[i+10]+sums[i+15]))
-#
-# avg_p = []
-# avg_n = []
-# for i in range(5):
-#     avg_p.append(((genes_counts[columns[i]] * genes_counts['bin_size']) / (genes_counts[columns[i]] + genes_counts[columns[i+5]])).sum()/ genes_counts['bin_size'].sum())
-#     avg_n.append(((genes_counts[columns[i+10]] * genes_counts['bin_size']) / (genes_counts[columns[i+10]] + genes_counts[columns[i+15]])).sum()/ genes_counts['bin_size'].sum())
+

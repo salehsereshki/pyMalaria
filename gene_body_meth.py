@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import sys
+import pyMalaria.gbm_computations as gbmc
 
 def get_gene_meth(meth_seq, genes_df,  bin_num, threshold = 0.1, flanking_size = 2000):
     genes_avg_p = np.zeros(bin_num, dtype=np.double)
@@ -296,7 +297,7 @@ def strand_specific_meth(organism_name, methylations, genes_seq, threshold, cove
     res = [genes_same_meC/genes_same_C, genes_non_same_meC/genes_non_same_C, nongenes_p_meC/nongenes_p_C, nongenes_n_meC/nongenes_n_C]
 
     xloc = range(4)
-    labels = ['genes same\n strand', 'genes different \n strand', 'non gene \n positive strand', 'non gene \n negative strand']
+    labels = ['gene sense\n strand', 'gene anti sense \n strand', 'non gene \n positive strand', 'non gene \n negative strand']
     barWidth = .5
 
     plt.bar(xloc, res, width=barWidth)
@@ -452,4 +453,17 @@ def plot_gene_body_meth(organism_name, meth_seq, genes_df, bin_num, threshold = 
     plt.axvline(x=0.0, color='black', linestyle='-')
     plt.rcParams['axes.facecolor'] = 'white'
     plt.savefig('genebody_' + str(organism_name) + '.jpg', dpi=2000)
+    plt.close()
+
+def plot_template_non_template(organism_name, meth_seq, genes_df, threshold=0.1):
+    temp_meth, nontemp_meth = gbmc.template_methylation(meth_seq, genes_df, threshold=threshold)
+    res = [temp_meth, nontemp_meth]
+    xloc = range(2)
+    labels = ['temp', 'non-temp']
+    barWidth = .2
+
+    plt.bar(xloc, res, width=barWidth)
+
+    plt.xticks(xloc, labels)
+    plt.savefig('temp-nontemp-' + str(organism_name) + '.jpg', dpi=2000)
     plt.close()

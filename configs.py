@@ -39,6 +39,8 @@ PF_config = {
     'chromosomes': pf_chromosomes
 }
 
+PV_expression = '/Users/salehsereshki/PycharmProjects/pythonProject/malaria/PvivaxP01_rnaseq.txt'
+
 
 def setup_config(config):
     config['meth_threshold'] = 0.1
